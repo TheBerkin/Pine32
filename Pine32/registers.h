@@ -1,0 +1,25 @@
+#pragma once
+
+// Registers
+#define NUM_REGISTERS 20
+
+#define REGISTER_A 0
+#define REGISTER_B 1
+#define REGISTER_C 2
+#define REGISTER_D 3
+#define REGISTER_E 4
+#define REGISTER_F 5
+#define REGISTER_G 6
+#define REGISTER_H 7
+#define REGISTER_I 8
+#define REGISTER_J 9
+#define REGISTER_K 10
+#define REGISTER_L 11
+#define REGISTER_OFFSET 12
+#define REGISTER_RESET 13
+#define REGISTER_EVENT_A 14
+#define REGISTER_EVENT_B 15
+#define REGISTER_EVENT_C 16
+#define REGISTER_EVENT_D 17
+#define REGISTER_EVENT_E 18
+#define REGISTER_EVENT_F 19
