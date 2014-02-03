@@ -4,10 +4,6 @@
 PineDevice::PineDevice()
 {
 	_objects = new PineCog*[MAX_PINE_OBJECTS];
-	for (int i = 0; i < MAX_PINE_OBJECTS; i++)
-	{
-		_objects[i] = nullptr;
-	}
 	_stack = new double[MAX_STACK_SIZE];
 	_slotrange = 0;
 	_stacksize = 0;
@@ -25,30 +21,34 @@ PINERESULT PineDevice::Step()
 	}
 	for (int i = 0; i < _slotrange; i++)
 	{
-		if (_objects[i] != nullptr)
+		if (_objects[i])
 		{
 			result |= (_objects[i]->Iterate());
 		}
 	}
-	_ticks++;
+	_ticks++;	
 	return result;
 }
 
+// Enables the device.
 void PineDevice::Enable()
 {
 	Enabled = TRUE;
 }
 
+// Disables the device.
 void PineDevice::Disable()
 {
 	Enabled = FALSE;
 }
+
 
 BOOL PineDevice::GetEnabled()
 {
 	return Enabled;
 }
 
+// Gets the number of elapsed ticks.
 UINT PineDevice::ticks()
 {
 	return _ticks;
@@ -73,7 +73,7 @@ PINERESULT PineDevice::Allocate(int &lpCogIndex)
 
 PINERESULT PineDevice::Assign(int index, PineCog *cog)
 {
-	if (_objects[index] != nullptr || index < 0 || index >= _slotrange || cog == nullptr)
+	if (_objects[index] || index < 0 || index >= _slotrange || !cog)
 	{
 		return PINE_BADPARAM;
 	}

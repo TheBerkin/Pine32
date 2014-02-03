@@ -57,11 +57,9 @@ PINERESULT PineCog::Iterate()
 	rmax = 1.0;	
 	x = double(_device->ticks() % _period) / _period;
 	
-	while (!eos())
-	{		
-		read_byte(ci);
-		ranged = (x >= rmin && x <= rmax);
-		
+	while (read_byte(ci))
+	{				
+		ranged = (x >= rmin && x <= rmax);		
 		switch (ci)
 		{
 			ranged_case(OP_ABS)
