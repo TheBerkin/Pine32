@@ -27,10 +27,10 @@
     <ClInclude Include="bytecode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pine32.h">
+    <ClInclude Include="cogmem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cogmem.h">
+    <ClInclude Include="pineapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,13 +38,13 @@
     <ClCompile Include="bytecode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pine32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pineapi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

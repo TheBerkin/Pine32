@@ -23,7 +23,7 @@ PINERESULT PineDevice::Step()
 	{
 		if (_objects[i])
 		{
-			result |= (_objects[i]->Iterate());
+			result |= (_objects[i]->Iterate());			
 		}
 	}
 	_ticks++;	

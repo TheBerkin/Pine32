@@ -8,6 +8,10 @@
 // API shit
 #define PINEAPI(ret_type) __declspec(dllexport) ret_type __stdcall
 
+class PineDevice;
+class PineCog;
+class CogBytecode;
+
 extern "C"
 {
 	PINEAPI(void) pineCreateDevice(PineDevice** ppDevice);

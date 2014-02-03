@@ -69,7 +69,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PINE32_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -84,14 +84,14 @@
     <ClInclude Include="cog.h" />
     <ClInclude Include="device.h" />
     <ClInclude Include="opcodes.h" />
-    <ClInclude Include="pine32.h" />
+    <ClInclude Include="pineapi.h" />
     <ClInclude Include="cogmem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bytecode.cpp" />
     <ClCompile Include="cog.cpp" />
     <ClCompile Include="device.cpp" />
-    <ClCompile Include="pine32.cpp" />
+    <ClCompile Include="pineapi.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
