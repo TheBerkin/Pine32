@@ -416,8 +416,7 @@ EventRegisterData* PineCog::evdata()
 
 PineCog::~PineCog()
 {
-	delete _code;
-	_code = nullptr;
+	// Do NOT delete code. Multiple cogs can use the same code.
 	delete[] _registers;
 	_registers = nullptr;
 	_device = nullptr;

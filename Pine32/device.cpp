@@ -86,7 +86,7 @@ PINERESULT PineDevice::Assign(int index, PineCog *cog)
 // Deletes the cog at the specified index.
 PINERESULT PineDevice::Deallocate(int cogIndex)
 {
-	if (cogIndex >= _slotrange || _objects[cogIndex] == nullptr)
+	if (cogIndex >= _slotrange || !_objects[cogIndex])
 	{
 		return PINE_EMPTYSLOT;
 	}
@@ -142,7 +142,7 @@ void PineDevice::DeallocateAll()
 {
 	for (int i = 0; i < _slotrange; i++)
 	{
-		if (_objects[i] != nullptr)
+		if (_objects[i])
 		{
 			delete _objects[i];
 			_objects[i] = nullptr;
@@ -156,7 +156,7 @@ int PineDevice::nearest_empty()
 {
 	for (int i = 0; i < MAX_PINE_OBJECTS; i++)
 	{
-		if (_objects[i] == nullptr)
+		if (!_objects[i])
 		{
 			return i;
 		}

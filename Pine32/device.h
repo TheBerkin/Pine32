@@ -20,6 +20,7 @@ typedef DWORD PINERESULT;
 #define PINE_REGERROR		0x00000080 // Tried to access an invalid register.
 #define PINE_BADPARAM		0x00000100 // Tried to pass a horribly wrong parameter.
 #define PINE_OPERROR		0x00000200 // Encountered an unrecognized instruction.
+#define PINE_INVALID		0x00000400 // Tried to use a bad pointer.
 
 
 class PineCog;

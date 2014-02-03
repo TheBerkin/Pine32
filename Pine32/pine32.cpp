@@ -6,38 +6,48 @@
 
 using namespace std;
 
+#define validate(ptr) if (!(ptr)) { return PINE_INVALID; }
+
 PINEAPI(void) pineCreateDevice(PineDevice** ppDevice)
 {
 	*ppDevice = new PineDevice();
 }
 
-PINEAPI(void) pineDestroyDevice(PineDevice *lpDevice)
+PINEAPI(PINERESULT) pineDestroyDevice(PineDevice *pDevice)
 {
-	delete lpDevice;
+	validate(pDevice)
+	delete pDevice;
+	return PINE_OK;
 }
 
-PINEAPI(PINERESULT) pineStepDevice(PineDevice *lpDevice)
+PINEAPI(PINERESULT) pineStepDevice(PineDevice *pDevice)
 {
-	return lpDevice->Step();
+	validate(pDevice)
+	return pDevice->Step();
 }
 
-PINEAPI(BOOL) pineGetEnabled(PineDevice *lpDevice)
+PINEAPI(BOOL) pineGetEnabled(PineDevice *pDevice)
 {
-	return lpDevice->GetEnabled();
+	return pDevice->GetEnabled();
 }
 
-PINEAPI(void) pineDisable(PineDevice *lpDevice)
+PINEAPI(PINERESULT) pineDisable(PineDevice *pDevice)
 {
-	lpDevice->Disable();
+	validate(pDevice)
+	pDevice->Disable();
+	return PINE_OK;
 }
 
-PINEAPI(void) pineEnable(PineDevice *lpDevice)
+PINEAPI(PINERESULT) pineEnable(PineDevice *pDevice)
 {
-	lpDevice->Enable();
+	validate(pDevice)
+	pDevice->Enable();
+	return PINE_OK;
 }
 
-PINEAPI(PINERESULT) pineCreateCog(PineDevice* device, CogBytecode* bytecode, UINT32 period, PineCog **hCog)
+PINEAPI(PINERESULT) pineCreateCog(PineDevice* pDevice, CogBytecode* bytecode, UINT32 period, PineCog **hCog)
 {	
+	validate(pDevice && bytecode)
 	if (period == 0)
 	{
 		return PINE_BADPARAM;
@@ -47,43 +57,50 @@ PINEAPI(PINERESULT) pineCreateCog(PineDevice* device, CogBytecode* bytecode, UIN
 		return PINE_BADPARAM;
 	}
 	int p = 0;
-	PINERESULT result = device->Allocate(p);
+	PINERESULT result = pDevice->Allocate(p);
 	if (result == PINE_OK)
 	{
-		PineCog* cog = new PineCog(device, period, bytecode);
+		PineCog* cog = new PineCog(pDevice, period, bytecode);
 		*hCog = cog;
-		device->Assign(p, *hCog);
+		pDevice->Assign(p, *hCog);
 	}
 	return result;
 }
 
-PINEAPI(PINERESULT) pineDestroyCog(PineDevice* device, PineCog* cog)
+PINEAPI(PINERESULT) pineDestroyCog(PineDevice* pDevice, PineCog* cog)
 {
-	return device->DeallocateObj(cog);
+	validate(pDevice && cog)
+	return pDevice->DeallocateObj(cog);
 }
 
 PINEAPI(PINERESULT) pineSetCogRegister(PineCog* cog, UINT32 reg, double value)
 {
+	validate(cog)
 	return cog->setreg(reg, value);
 }
 
 PINEAPI(PINERESULT) pineGetCogRegister(PineCog* cog, UINT32 reg, double* valueOut)
 {
+	validate(cog)
 	return cog->getreg(reg, valueOut);
 }
 
-PINEAPI(double) pineGetCogOutput(PineCog* cog)
-{
-	return cog->out();
+PINEAPI(PINERESULT) pineGetCogOutput(PineCog* cog, double* output)
+{	
+	validate(cog)
+	*output = cog->out();
+	return PINE_OK;
 }
 
-PINEAPI(void) pineRegisterFireCallback(PineCog* cog, CogFireCallback callback)
+PINEAPI(PINERESULT) pineRegisterFireCallback(PineCog* cog, CogFireCallback callback)
 {
+	validate(cog)
 	cog->RegisterFireEventCallback(callback);
+	return PINE_OK;
 }
 
 PINEAPI(PINERESULT) pineLoadBytecode(const char* path, CogBytecode** ppCode)
-{
+{	
 	ifstream file(path, ios::binary | ios::in);
 	if (!file.is_open())
 	{
@@ -118,7 +135,9 @@ PINEAPI(PINERESULT) pineLoadBytecode(const char* path, CogBytecode** ppCode)
 	return PINE_OK;
 }
 
-PINEAPI(void) pineUnloadBytecode(CogBytecode *lpBytecode)
+PINEAPI(PINERESULT) pineUnloadBytecode(CogBytecode *lpbc)
 {
-	delete lpBytecode;
+	validate(lpbc)
+	delete lpbc;
+	return PINE_OK;
 }
