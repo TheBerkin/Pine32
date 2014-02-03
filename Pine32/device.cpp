@@ -4,6 +4,10 @@
 PineDevice::PineDevice()
 {
 	_objects = new PineCog*[MAX_PINE_OBJECTS];
+	for (int i = 0; i < MAX_PINE_OBJECTS; i++)
+	{
+		_objects[i] = nullptr;
+	}
 	_stack = new double[MAX_STACK_SIZE];
 	_slotrange = 0;
 	_stacksize = 0;
@@ -51,7 +55,7 @@ UINT PineDevice::ticks()
 }
 
 // Allocates a cog and outputs the index at which it is allocated.
-PINERESULT PineDevice::Allocate(PineCog *lpCog, int *lpCogIndex)
+PINERESULT PineDevice::Allocate(int &lpCogIndex)
 {
 	int slot = nearest_empty();
 
@@ -61,11 +65,21 @@ PINERESULT PineDevice::Allocate(PineCog *lpCog, int *lpCogIndex)
 	}
 	else if (slot < 0)
 	{
-		*lpCogIndex = -1;
 		return PINE_DEVICEFULL; // oh shit
 	}	
-	*lpCogIndex = slot;
-	_objects[slot] = lpCog;
+	lpCogIndex = slot;
+	return PINE_OK;
+}
+
+PINERESULT PineDevice::Assign(int index, PineCog *cog)
+{
+	if (_objects[index] != nullptr || index < 0 || index >= _slotrange || cog == nullptr)
+	{
+		return PINE_BADPARAM;
+	}
+
+	_objects[index] = cog;
+
 	return PINE_OK;
 }
 
@@ -142,7 +156,7 @@ int PineDevice::nearest_empty()
 {
 	for (int i = 0; i < MAX_PINE_OBJECTS; i++)
 	{
-		if (_objects[i] != nullptr)
+		if (_objects[i] == nullptr)
 		{
 			return i;
 		}

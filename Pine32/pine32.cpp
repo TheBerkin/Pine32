@@ -6,9 +6,9 @@
 
 using namespace std;
 
-PINEAPI(PineDevice*) pineCreateDevice()
+PINEAPI(void) pineCreateDevice(PineDevice** ppDevice)
 {
-	return new PineDevice();
+	*ppDevice = new PineDevice();
 }
 
 PINEAPI(void) pineDestroyDevice(PineDevice *lpDevice)
@@ -36,20 +36,23 @@ PINEAPI(void) pineEnable(PineDevice *lpDevice)
 	lpDevice->Enable();
 }
 
-PINEAPI(PINERESULT) pineCreateCog(PineDevice* device, CogBytecode* bytecode, int period, PineCog* lpCogOut)
-{
-	PineCog* ohboy = new PineCog(device, period, bytecode);
-	int p = 0;
-	PINERESULT result = device->Allocate(ohboy, &p);
-	if (result != PINE_OK)
+PINEAPI(PINERESULT) pineCreateCog(PineDevice* device, CogBytecode* bytecode, UINT32 period, PineCog **hCog)
+{	
+	if (period == 0)
 	{
-		lpCogOut = nullptr;
-		delete ohboy;
-		ohboy = nullptr;
+		return PINE_BADPARAM;
 	}
-	else
+	else if (bytecode == nullptr)
 	{
-		lpCogOut = ohboy;
+		return PINE_BADPARAM;
+	}
+	int p = 0;
+	PINERESULT result = device->Allocate(p);
+	if (result == PINE_OK)
+	{
+		PineCog* cog = new PineCog(device, period, bytecode);
+		*hCog = cog;
+		device->Assign(p, *hCog);
 	}
 	return result;
 }
@@ -79,7 +82,7 @@ PINEAPI(void) pineRegisterFireCallback(PineCog* cog, CogFireCallback callback)
 	cog->RegisterFireEventCallback(callback);
 }
 
-PINEAPI(PINERESULT) pineLoadBytecode(const char* path, CogBytecode* out)
+PINEAPI(PINERESULT) pineLoadBytecode(const char* path, CogBytecode** ppCode)
 {
 	ifstream file(path, ios::binary | ios::in);
 	if (!file.is_open())
@@ -110,14 +113,12 @@ PINEAPI(PINERESULT) pineLoadBytecode(const char* path, CogBytecode* out)
 	
 	file.close();
 
-	CogBytecode* bc = new CogBytecode(code, ptrs, codelen, ptrcnt);
-	*out = *bc;
+	*ppCode = new CogBytecode(code, ptrs, codelen, ptrcnt);
 
 	return PINE_OK;
 }
 
-PINEAPI(void) pineUnloadBytecode(CogBytecode* lpBytecode)
+PINEAPI(void) pineUnloadBytecode(CogBytecode *lpBytecode)
 {
 	delete lpBytecode;
-	lpBytecode = nullptr;
 }

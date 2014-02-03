@@ -1,17 +1,22 @@
 #include<cmath>
 #include<Windows.h>
+#include <iostream>
+#include <random>
+#include <ctime>
 
 #include "cog.h"
-#include "registers.h"
+#include "cogmem.h"
 #include "device.h"
 #include "bytecode.h"
 #include "opcodes.h"
 
+using namespace std;
+
 #define ranged_case(c) case c: if (!ranged) { break; }	
-#define ranged_case_readint(c, reg) case c: if (!read_int(&reg)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
-#define ranged_case_readint2(c, rega, regb) case c: if (!read_int(&rega)) { return PINE_ENDOFSTREAM; } else if (!read_int(&regb)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
-#define ranged_case_readdouble(c, v)  case c: if (!read_double(&v)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
-#define case_readdouble2(c, v1, v2) case c: if (!read_double(&v1)) { return PINE_ENDOFSTREAM; } else if (!read_double(&v2)) { return PINE_ENDOFSTREAM; }
+#define ranged_case_readint(c, reg) case c: if (!read_int(reg)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
+#define ranged_case_readint2(c, rega, regb) case c: if (!read_int(rega)) { return PINE_ENDOFSTREAM; } else if (!read_int(regb)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
+#define ranged_case_readdouble(c, v)  case c: if (!read_double(v)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
+#define case_readdouble2(c, v1, v2) case c: if (!read_double(v1)) { return PINE_ENDOFSTREAM; } else if (!read_double(v2)) { return PINE_ENDOFSTREAM; }
 #define pop(x) if (_device->Pop(&x) != PINE_OK) { return PINE_STACKERROR; }
 #define push(x) if (_device->Push(x) != PINE_OK) { return PINE_STACKERROR; }
 #define ptr(r) if (!_code->ptr(r, &_readpos)) { return PINE_PTRERROR; }
@@ -26,14 +31,18 @@ cogptr::cogptr(double vd)
 	d = vd;
 }
 
-PineCog::PineCog(PineDevice *lpDevice, int period, CogBytecode* bytecode)
+PineCog::PineCog(PineDevice *lpDevice, UINT32 period, CogBytecode* bytecode)
 {	
 	_device = lpDevice;
-	_period = period;
 	_code = bytecode;
 	_registers = new double[NUM_REGISTERS];
 	_cbFire = nullptr;
 	_output = 0;
+	_period = period;
+	srand(time(0));
+
+	rmin = 0.0;
+	rmax = 1.0;
 }
 
 double PineCog::out()
@@ -42,23 +51,17 @@ double PineCog::out()
 }
 
 PINERESULT PineCog::Iterate()
-{
-	double va, vb, vc;
-	INT32 r0, r1;
-	BOOL ranged = FALSE;
-	double rmin = 0.0;
-	double rmax = 1.0;
-	double x = double(_device->ticks() % _period) / _period;
-
-	byte ci;
-	byte* lpci = &ci;
-
+{	
+	_readpos = 0;
+	rmin = 0.0;
+	rmax = 1.0;	
+	x = double(_device->ticks() % _period) / _period;
+	
 	while (!eos())
-	{
-		read_byte(lpci);
-
-		ranged = x >= rmin && x <= rmax;
-
+	{		
+		read_byte(ci);
+		ranged = (x >= rmin && x <= rmax);
+		
 		switch (ci)
 		{
 			ranged_case(OP_ABS)
@@ -177,6 +180,11 @@ PINERESULT PineCog::Iterate()
 				pop(va);
 				push(fmod(va, vb));
 			break;
+			ranged_case(OP_MUL)
+				pop(vb);
+				pop(va);
+				push(va * vb);
+			break;
 			ranged_case(OP_NOT)
 				pop(va);
 				push(va == 0 ? 1.0 : 0.0);
@@ -193,7 +201,7 @@ PINERESULT PineCog::Iterate()
 				pop(va);
 				push(pow(va, vb));
 			break;
-			ranged_case_readint(OP_PROD, r0)
+			ranged_case_readint(OP_PRD, r0)
 				pop(va);
 				if (va <= 0)
 				{
@@ -281,18 +289,45 @@ PINERESULT PineCog::Iterate()
 				return PINE_REGERROR;
 			}
 			break;
+			ranged_case(OP_RAND)
+			{				
+				pop(vb);
+				pop(va);
+				if (vb - va == 0.0 || va > vb)
+				{
+					push(0);
+				}
+				else
+				{
+					double rint = double(rand());
+					double rfrac = fmod(cogptr(rand()).d, 1.0); // Convert the bits directly into a double
+					push(fmod(rint + rfrac, vb - va) + va);
+				}
+			}
+			break;
+			ranged_case(OP_OUTS)
+				pop(_output);
+			break;
+			ranged_case_readint(OP_OUTR, r0)
+			if (getreg(r0, &_output) != PINE_OK)
+			{
+				return PINE_REGERROR;
+			}
+			break;
+			ranged_case_readdouble(OP_OUTC, va)
+				_output = va;
+			break;
 			default:
 				return PINE_OPERROR;
 		}
+		
 	}
+	
 	if (_registers[REGISTER_RESET] != 0.0)
 	{
 		ZeroMemory(_registers, NUM_REGISTERS * sizeof(double));
 	}
-
-	pop(_output);
 	_output += _registers[REGISTER_OFFSET];
-	_readpos = 0;
 	return PINE_OK;
 }
 
@@ -318,7 +353,7 @@ PINERESULT PineCog::setreg(UINT32 reg, double value)
 
 BOOL PineCog::eos()
 {
-	return _readpos < _code->length();
+	return _readpos >= _code->length();
 }
 
 void PineCog::RegisterFireEventCallback(CogFireCallback cb)
@@ -334,41 +369,40 @@ void PineCog::fire()
 	}
 }
 
-BOOL PineCog::read_byte(byte* out)
+BOOL PineCog::read_byte(byte& out)
 {
-	if (_readpos + sizeof(byte) >= _code->length())
+	if (_readpos + sizeof(byte) > _code->length())
 	{
 		_readpos = _code->length();
 		return FALSE;
 	}
 
-	*out = _code->GetByte(_readpos);
-	_readpos += sizeof(byte);
+	out = _code->GetByte(_readpos++);
 	return TRUE;
 }
 
-BOOL PineCog::read_int(int* out)
+BOOL PineCog::read_int(INT32& out)
 {
-	if (_readpos + sizeof(int) >= _code->length())
+	if (_readpos + sizeof(INT32) > _code->length())
 	{
 		_readpos = _code->length();
 		return FALSE;
 	}
 
-	*out = _code->GetInt32(_readpos);
-	_readpos += sizeof(int);
+	out = _code->GetInt32(_readpos);
+	_readpos += sizeof(INT32);
 	return TRUE;
 }
 
-BOOL PineCog::read_double(double* out)
+BOOL PineCog::read_double(double& out)
 {
-	if (_readpos + sizeof(double) >= _code->length())
+	if (_readpos + sizeof(double) > _code->length())
 	{
 		_readpos = _code->length();
 		return FALSE;
 	}
 
-	*out = _code->GetDouble(_readpos);
+	out = _code->GetDouble(_readpos);
 	_readpos += sizeof(double);
 	return TRUE;
 }

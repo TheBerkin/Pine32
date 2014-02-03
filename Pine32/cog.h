@@ -23,7 +23,7 @@ class CogBytecode;
 class PineCog
 {
 public:	
-	PineCog(PineDevice*, int, CogBytecode*);
+	PineCog(PineDevice*, UINT32, CogBytecode*);
 	~PineCog();
 
 	void RegisterFireEventCallback(CogFireCallback cb);
@@ -35,20 +35,23 @@ public:
 private:
 	BOOL eos();
 	int _readpos;
-	BOOL read_int(int*);
-	BOOL read_byte(byte*);
-	BOOL read_double(double*);
+	BOOL read_int(INT32&);
+	BOOL read_byte(byte&);
+	BOOL read_double(double&);
 	
 	EventRegisterData* evdata();
 	void fire();
 	CogFireCallback _cbFire;
 	
-	int _period;
+	UINT32 _period;
 	double _output;
 
 	CogBytecode* _code;
 	PineDevice* _device;
 
 	double* _registers; // REGISTER_COUNT	
-	
+	INT32 r0, r1;
+	double va, vb, vc, rmin, rmax, x;
+	BOOL ranged;	
+	byte ci;
 };

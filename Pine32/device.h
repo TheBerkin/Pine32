@@ -12,7 +12,7 @@ typedef DWORD PINERESULT;
 #define PINE_OK				0x00000000 // All is good.
 #define PINE_STACKERROR		0x00000001 // Generic stack error. Can refer to overflow, imbalance or popping from empty stack.
 #define PINE_PTRERROR		0x00000002 // Bad jump point, usually indicates a compiler issue.
-#define PINE_FORMATERROR	0x00000004 // Cog couldn't load because the magic didn't match.
+#define PINE_FORMATERROR	0x00000004 // Your bytecode is corrupt probably.
 #define PINE_NOTFOUND		0x00000008 // Cog couldn't be found in the cache.
 #define PINE_DEVICEFULL		0x00000010 // Device can't allocate cog because it's full.
 #define PINE_EMPTYSLOT		0x00000020 // Tried to access an empty cog slot.
@@ -38,7 +38,8 @@ public:
 	PINERESULT Push(double);
 	PINERESULT Pop(double*);
 
-	PINERESULT Allocate(PineCog*, int*);
+	PINERESULT Allocate(int&);
+	PINERESULT Assign(int, PineCog*);
 	PINERESULT Deallocate(int);
 	PINERESULT DeallocateObj(PineCog*);
 	void DeallocateAll();

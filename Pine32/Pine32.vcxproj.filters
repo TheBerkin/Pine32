@@ -21,9 +21,6 @@
     <ClInclude Include="cog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="registers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="opcodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -31,6 +28,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pine32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cogmem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -69,6 +69,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PINE32_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -83,7 +85,7 @@
     <ClInclude Include="device.h" />
     <ClInclude Include="opcodes.h" />
     <ClInclude Include="pine32.h" />
-    <ClInclude Include="registers.h" />
+    <ClInclude Include="cogmem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bytecode.cpp" />
