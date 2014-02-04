@@ -12,11 +12,15 @@
 
 using namespace std;
 
-#define ranged_case(c) case c: if (!ranged) { break; }	
-#define ranged_case_readint(c, reg) case c: if (!read_int(reg)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
-#define ranged_case_readint2(c, rega, regb) case c: if (!read_int(rega)) { return PINE_ENDOFSTREAM; } else if (!read_int(regb)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
-#define ranged_case_readdouble(c, v)  case c: if (!read_double(v)) { return PINE_ENDOFSTREAM; } if (!ranged) { break; }
+#define rchk() if (!ranged) { break; }
+#define tchk(i) if (!_timers[i]) { _timers[i] = new Timer(); }
+#define ranged_case(c) case c: rchk();
+#define ranged_case_readint(c, reg) case c: if (!read_int(reg)) { return PINE_ENDOFSTREAM; } rchk();
+#define ranged_case_readint2(c, rega, regb) case c: if (!read_int(rega)) { return PINE_ENDOFSTREAM; } else if (!read_int(regb)) { return PINE_ENDOFSTREAM; } rchk();
+#define ranged_case_readdouble(c, v)  case c: if (!read_double(v)) { return PINE_ENDOFSTREAM; } rchk();
 #define case_readdouble2(c, v1, v2) case c: if (!read_double(v1)) { return PINE_ENDOFSTREAM; } else if (!read_double(v2)) { return PINE_ENDOFSTREAM; }
+#define ranged_case_read(c, t1, r1) case c: if (!read<t1>(r1)) { return PINE_ENDOFSTREAM; } rchk();
+#define ranged_case_read2(c, t1, r1, t2, r2) case c: if (!read<t1>(r1)) { return PINE_ENDOFSTREAM; } else if (!read<t2>(r2)) { return PINE_ENDOFSTREAM; } rchk();
 #define pop(x) if (_device->Pop(&x) != PINE_OK) { return PINE_STACKERROR; }
 #define push(x) if (_device->Push(x) != PINE_OK) { return PINE_STACKERROR; }
 #define ptr(r) if (!_code->ptr(r, &_readpos)) { return PINE_PTRERROR; }
@@ -36,6 +40,7 @@ PineCog::PineCog(PineDevice *lpDevice, UINT32 period, CogBytecode* bytecode)
 	_device = lpDevice;
 	_code = bytecode;
 	_registers = new double[NUM_REGISTERS];
+	_timers = new Timer*[NUM_TIMERS];
 	_cbFire = nullptr;
 	_output = 0;
 	_period = period;
@@ -315,18 +320,138 @@ PINERESULT PineCog::Iterate()
 			ranged_case_readdouble(OP_OUTC, va)
 				_output = va;
 			break;
+			ranged_case_read(OP_TIMER_START, UINT32, u0)
+				tstart(u0);
+			break;
+			ranged_case_read(OP_TIMER_STOP, UINT32, u0)
+				tstop(u0);
+			break;
+			ranged_case_read2(OP_TIMER_SET, UINT32, u0, UINT32, u1)
+				tset(u0, u1);
+			break;
+			ranged_case_read(OP_TIMER_STATUS, UINT32, u0)
+				push(tstatus(u0));
+			break;
+			ranged_case_read(OP_TIMER_GETT, UINT32, u0)
+				push(tgett(u0));
+			break;
+			ranged_case_read(OP_TIMER_GETL, UINT32, u0)
+				push(tgetl(u0));
+			break;
+			ranged_case_read(OP_TIMER_RESET, UINT32, u0)
+				treset(u0);
+			break;
 			default:
 				return PINE_OPERROR;
 		}
 		
-	}
-	
+	}	
 	if (_registers[REGISTER_RESET] != 0.0)
 	{
 		ZeroMemory(_registers, NUM_REGISTERS * sizeof(double));
 	}
 	_output += _registers[REGISTER_OFFSET];
+
+	dotimers();
+
 	return PINE_OK;
+}
+
+void PineCog::dotimers()
+{
+	for (int i = 0; i < NUM_TIMERS; i++)
+	{
+		if (!_timers[i])
+		{
+			continue;
+		}
+		else if (_timers[i]->Active)
+		{
+			_timers[i]->Ticks++;
+		}
+	}
+}
+
+void PineCog::tset(UINT32 i, UINT32 v)
+{
+	if (i > NUM_TIMERS)
+	{
+		return;
+	}
+	tchk(i);
+	_timers[i]->Limit = v;
+}
+
+void PineCog::tstart(UINT32 i)
+{
+	if (i > NUM_TIMERS)
+	{
+		return;
+	}
+	tchk(i);
+	_timers[i]->Active = TRUE;
+}
+
+void PineCog::tstop(UINT32 i)
+{
+	if (i > NUM_TIMERS)
+	{
+		return;
+	}
+	tchk(i);
+	_timers[i]->Active = FALSE;
+}
+
+timer_status PineCog::tstatus(UINT32 i)
+{
+	if (i > NUM_TIMERS)
+	{
+		return COG_TIMER_OFF;
+	}
+	if (!_timers[i])
+	{
+		return COG_TIMER_OFF;
+	}
+
+	if (_timers[i]->Ticks < _timers[i]->Limit)
+	{
+		return COG_TIMER_ON;
+	}
+	else
+	{
+		return COG_TIMER_END;
+	}
+}
+
+void PineCog::treset(UINT32 i)
+{
+	if (i > NUM_TIMERS)
+	{
+		return;
+	}
+	tchk(i);
+	_timers[i]->Ticks = 0;
+	_timers[i]->Active = FALSE;
+}
+
+UINT32 PineCog::tgett(UINT32 i)
+{
+	if (i > NUM_TIMERS)
+	{
+		return 0;
+	}
+	tchk(i);
+	return _timers[i]->Ticks;
+}
+
+UINT32 PineCog::tgetl(UINT32 i)
+{
+	if (i > NUM_TIMERS)
+	{
+		return 0;
+	}
+	tchk(i);
+	return _timers[i]->Limit;
 }
 
 PINERESULT PineCog::getreg(UINT32 reg, double* out)
@@ -347,11 +472,6 @@ PINERESULT PineCog::setreg(UINT32 reg, double value)
 	}
 	_registers[reg] = value;
 	return PINE_OK;
-}
-
-BOOL PineCog::eos()
-{
-	return _readpos >= _code->length();
 }
 
 void PineCog::RegisterFireEventCallback(CogFireCallback cb)
@@ -405,6 +525,20 @@ BOOL PineCog::read_double(double& out)
 	return TRUE;
 }
 
+template <typename T>
+T PineCog::read(T& out)
+{
+	if (_readpos + sizeof(T) > _code->length())
+	{
+		_readpos = _code->length();
+		return FALSE;
+	}
+
+	out = _code->Get<T>(_readpos);
+	_readpos += sizeof(T);
+	return TRUE;
+}
+
 EventRegisterData* PineCog::evdata()
 {
 	void *evd = malloc(sizeof EventRegisterData);
@@ -417,5 +551,15 @@ PineCog::~PineCog()
 	// Do NOT delete code. Multiple cogs can use the same code.
 	delete[] _registers;
 	_registers = nullptr;
+	for (int i = 0; i < NUM_TIMERS; i++)
+	{
+		if (_timers[i])
+		{
+			delete _timers[i];
+			_timers[i] = nullptr;
+		}
+	}
+	delete[] _timers;
+	_timers = nullptr;
 	_device = nullptr;
 }

@@ -19,7 +19,10 @@ public:
 
 	byte GetByte(INT32);
 	INT32 GetInt32(INT32);
+	UINT32 GetUInt32(INT32);
 	double GetDouble(INT32);
+	template<typename T>
+	T Get(INT32);
 	BOOL ptr(INT32, INT32*);
 	
 	INT32 length();

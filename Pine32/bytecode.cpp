@@ -29,6 +29,17 @@ DOUBLE CogBytecode::GetDouble(INT32 pos)
 	return *((DOUBLE*)(_code + pos));
 }
 
+UINT32 CogBytecode::GetUInt32(INT32 pos)
+{
+	return *((UINT32*)(_code + pos));
+}
+
+template <typename T>
+T CogBytecode::Get(INT32)
+{
+	return *((T*)(_code + pos));
+}
+
 BOOL CogBytecode::ptr(INT32 index, INT32* ptr)
 {
 	if (index >= _ptrcount)
